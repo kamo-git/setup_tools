@@ -1,0 +1,7 @@
+# CodeRabbit Configuration
+language: "ja-JP"
+reviews:
+  profile: "security-focused"
+  instructions: |
+    日本語でレビューを行ってください。
+    セキュリティ上の脆弱性（認証、暗号化、情報の漏洩など）には特に注意を払ってレビューしてください。
