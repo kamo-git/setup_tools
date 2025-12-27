@@ -116,36 +116,45 @@ sleep 2
 
 echo "=== vpncmd で設定を行います ==="
 
-# コマンド実行用関数
-exec_vpncmd() {
-    "$VPNCMD" localhost /CLIENT /CMD "$@"
+# vpncmd に標準入力からコマンドを渡すための関数
+# 使用法: exec_vpncmd_stdin <<EOF
+# CommandArg1
+# CommandArg2
+# EOF
+exec_vpncmd_stdin() {
+    "$VPNCMD" localhost /CLIENT /IN <&0
 }
 
 echo "--- 仮想NIC ($NIC_NAME) の設定 ---"
 # NicCreateを試行。成功すれば作成完了。
 # 失敗した場合（終了コード非0）、既に存在するとみなしてNicEnableを実行。
-if exec_vpncmd NicCreate "$NIC_NAME" > /dev/null 2>&1; then
+# 注: NicCreate等は機密情報を含まないため引数渡しでも許容範囲だが、統一感を出すため必要に応じて変更可能。
+# ここでは単純なコマンドなのでそのまま実行するが、エラーハンドリングのため関数を使わずに直接呼ぶ
+if "$VPNCMD" localhost /CLIENT /CMD NicCreate "$NIC_NAME" > /dev/null 2>&1; then
     echo "仮想NIC $NIC_NAME を新規作成しました。"
 else
     echo "仮想NIC $NIC_NAME の作成をスキップしました（既に存在します）。設定を有効化します..."
-    exec_vpncmd NicEnable "$NIC_NAME"
+    "$VPNCMD" localhost /CLIENT /CMD NicEnable "$NIC_NAME"
 fi
 
 echo "--- 接続アカウント ($ACCOUNT_NAME) の設定 ---"
 # 既存設定がある場合は上書き（削除→作成）
 echo "アカウント設定を更新します..."
-exec_vpncmd AccountDelete "$ACCOUNT_NAME" > /dev/null 2>&1 || true
-exec_vpncmd AccountCreate "$ACCOUNT_NAME" /SERVER:"$VPN_SERVER_HOST:$VPN_SERVER_PORT" /HUB:"$VPN_HUB_NAME" /USERNAME:"$VPN_USER" /NICNAME:"$NIC_NAME"
+"$VPNCMD" localhost /CLIENT /CMD AccountDelete "$ACCOUNT_NAME" > /dev/null 2>&1 || true
 
-echo "--- パスワードの設定 ---"
-exec_vpncmd AccountPasswordSet "$ACCOUNT_NAME" /PASSWORD:"$VPN_PASSWORD" /TYPE:standard
+# 機密情報(ユーザー名、パスワード)を含むため、標準入力経由で渡す
+exec_vpncmd_stdin <<EOF
+AccountCreate $ACCOUNT_NAME /SERVER:$VPN_SERVER_HOST:$VPN_SERVER_PORT /HUB:$VPN_HUB_NAME /USERNAME:$VPN_USER /NICNAME:$NIC_NAME
+AccountPasswordSet $ACCOUNT_NAME /PASSWORD:$VPN_PASSWORD /TYPE:standard
+exit
+EOF
 
 echo "--- 接続開始 ---"
-exec_vpncmd AccountConnect "$ACCOUNT_NAME"
+"$VPNCMD" localhost /CLIENT /CMD AccountConnect "$ACCOUNT_NAME"
 
 echo "=== 接続状態の確認 ==="
 sleep 3
-exec_vpncmd AccountList
+"$VPNCMD" localhost /CLIENT /CMD AccountList
 
 # ==========================================
 # 4. IPアドレスの設定 (固定IP or DHCP)
