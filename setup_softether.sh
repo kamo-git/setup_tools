@@ -67,6 +67,9 @@ else
 
     echo "--- SoftEther VPN Client をダウンロードしています ---"
     TEMP_DIR=$(mktemp -d)
+    # スクリプト終了時に一時ディレクトリを削除するトラップを設定
+    trap 'rm -rf "$TEMP_DIR"' EXIT
+
     cd "$TEMP_DIR"
     echo "ダウンロード先: $DL_URL"
     wget -O softether-vpnclient.tar.gz "$DL_URL"
