@@ -102,8 +102,7 @@ for DB_NAME in "${DB_ARRAY[@]}"; do
     OUTPUT_FILE="${EXPORT_DIR}/${DB_NAME}.sql"
 
     # shellcheck disable=SC2086
-    ERROR_MSG=$(mysqldump ${MYSQL_OPTS} --no-data --skip-comments "${DB_NAME}" 2>&1 > "${OUTPUT_FILE}")
-    if [ $? -eq 0 ]; then
+    if ERROR_MSG=$(mysqldump ${MYSQL_OPTS} --no-data --skip-comments "${DB_NAME}" 2>&1 > "${OUTPUT_FILE}"); then
         echo "完了"
         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     else
