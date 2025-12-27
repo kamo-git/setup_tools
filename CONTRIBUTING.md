@@ -1,20 +1,20 @@
-# Contributing Guide
+# 貢献ガイド (Contributing Guide)
 
-## Development Workflow
+## 開発ワークフロー
 
-To ensure code quality and security, all contributors must follow this workflow:
+コードの品質とセキュリティを確保するため、すべてのコントリビューターは以下のワークフローに従ってください：
 
-1.  **Create a Branch**: Never commit directly to `main`. Create a descriptive branch for your feature or fix.
+1.  **ブランチの作成**: `main` ブランチに直接コミットしないでください。機能や修正ごとにわかりやすい名前のブランチを作成してください。
     ```bash
     git checkout -b feature/your-feature-name
     ```
-2.  **Pull Request**: Push your branch and create a Pull Request (PR).
-3.  **Code Review**: Wait for the automated CodeRabbit review (and human reviews if applicable).
-    *   **Language**: Japanese
-    *   **Focus**: Security and Code Quality
-4.  **Address Feedback**: Apply necessary fixes based on the review comments.
-5.  **Merge**: Once approved, merge the PR into `main`.
+2.  **プルリクエスト**: ブランチをプッシュし、プルリクエスト (PR) を作成してください。
+3.  **コードレビュー**: 自動化された CodeRabbit のレビュー（および該当する場合は人間によるレビュー）を待機してください。
+    *   **言語**: 日本語
+    *   **重点項目**: セキュリティおよびコード品質
+4.  **フィードバックへの対応**: レビューコメントに基づいて必要な修正を行ってください。
+5.  **マージ**: 承認された後、PR を `main` にマージしてください。
 
-## CodeRabbit Configuration
+## CodeRabbit 設定
 
-This project uses CodeRabbit for automated reviews. Configuration can be found in `.coderabbit.yaml`.
+このプロジェクトでは CodeRabbit を使用して自動レビューを行っています。設定は `.coderabbit.yaml` にあります。
