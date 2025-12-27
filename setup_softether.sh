@@ -14,6 +14,18 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
+# .env のパーミッション/所有者チェック (セキュリティ対策)
+if [ -O "$ENV_FILE" ]; then
+    # ファイル所有者が自分(実行ユーザー)の場合
+    CURRENT_PERM=$(stat -c "%a" "$ENV_FILE")
+    if [ "$CURRENT_PERM" -gt 600 ] && [ "$CURRENT_PERM" -ne 600 ] && [ "$CURRENT_PERM" -ne 400 ]; then
+        echo "警告: $ENV_FILE のパーミッションが $CURRENT_PERM です。セキュリティのため 600 (自分のみ読み書き可) に変更します。"
+        chmod 600 "$ENV_FILE"
+    fi
+else
+    echo "警告: $ENV_FILE の所有者が実行ユーザーと異なります。内容を信頼できるか確認してください。"
+fi
+
 # 設定読み込み
 source "$ENV_FILE"
 
