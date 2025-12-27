@@ -12,22 +12,27 @@ SoftEther VPN Client (Linux) のインストールから接続設定までを自
 ## 使い方
 
 1.  ディレクトリに移動します。
+
     ```bash
     cd softether-vpn
     ```
 
 2.  設定ファイルを準備します。
+
     ```bash
     cp .env.sample .env
     nano .env
     ```
+
     `.env` ファイル内で、接続先のサーバー情報、ユーザー名、パスワード、固定IP設定などを記述してください。
 
 3.  スクリプトを実行します。
+
     ```bash
     chmod +x setup.sh
     sudo ./setup.sh
     ```
+
 
 ## 動作確認環境
 
