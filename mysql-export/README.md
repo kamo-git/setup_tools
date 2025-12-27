@@ -47,7 +47,7 @@ OUTPUT_DIR=./output
 
 ## 出力例
 
-```
+```text
 output/
 └── 2025-12-27_143000/
     ├── app_db.sql

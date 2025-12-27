@@ -15,7 +15,11 @@ if [ ! -f "${ENV_FILE}" ]; then
 fi
 
 # .envファイルのパーミッションチェック
-ENV_PERM=$(stat -c "%a" "${ENV_FILE}")
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ENV_PERM=$(stat -f "%Lp" "${ENV_FILE}")
+else
+    ENV_PERM=$(stat -c "%a" "${ENV_FILE}")
+fi
 if [ "${ENV_PERM}" != "600" ] && [ "${ENV_PERM}" != "400" ]; then
     echo "警告: .envファイルのパーミッションが${ENV_PERM}です"
     echo "セキュリティのため、以下のコマンドでパーミッションを変更することを推奨します:"
@@ -57,6 +61,7 @@ if [ -n "${MYSQL_PASSWORD}" ]; then
     export MYSQL_PWD="${MYSQL_PASSWORD}"
 fi
 
+# shellcheck disable=SC2086
 if ! mysqladmin ${MYSQL_OPTS} ping &>/dev/null; then
     echo "エラー: MySQLサーバーに接続できません"
     echo "接続情報を確認してください:"
@@ -96,13 +101,15 @@ for DB_NAME in "${DB_ARRAY[@]}"; do
 
     OUTPUT_FILE="${EXPORT_DIR}/${DB_NAME}.sql"
 
-    if mysqldump ${MYSQL_OPTS} --no-data --skip-comments "${DB_NAME}" > "${OUTPUT_FILE}" 2>/dev/null; then
+    # shellcheck disable=SC2086
+    ERROR_MSG=$(mysqldump ${MYSQL_OPTS} --no-data --skip-comments "${DB_NAME}" 2>&1 > "${OUTPUT_FILE}")
+    if [ $? -eq 0 ]; then
         echo "完了"
-        ((SUCCESS_COUNT++))
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     else
-        echo "失敗"
+        echo "失敗: ${ERROR_MSG}"
         rm -f "${OUTPUT_FILE}"
-        ((FAIL_COUNT++))
+        FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
 done
 
