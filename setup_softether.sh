@@ -67,8 +67,7 @@ else
     if command -v zypper &> /dev/null; then
         # -n: non-interactive
         # 固定IPの場合はdhcp-clientは必須ではないが、iproute2等は必要
-        # curl はIP確認等で使用するため追加
-        zypper -n install gcc make wget tar curl
+        zypper -n install gcc make wget tar
     elif command -v apt-get &> /dev/null; then
         apt-get update
         apt-get install -y build-essential wget
