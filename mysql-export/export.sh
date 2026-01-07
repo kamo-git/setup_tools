@@ -65,18 +65,18 @@ OUTPUT_DIR="${OUTPUT_DIR:-./output}"
 # ===========================================
 # MySQL認証情報ファイルの作成
 # ===========================================
-MYSQL_CREDS_FILE=$(mktemp)
+MYSQL_CREDS_FILE=$(mktemp -t mysql_creds.XXXXXX)
 chmod 600 "${MYSQL_CREDS_FILE}"
 
 cat > "${MYSQL_CREDS_FILE}" <<EOF
 [client]
-host=${MYSQL_HOST}
-port=${MYSQL_PORT}
-user=${MYSQL_USER}
+host='${MYSQL_HOST}'
+port='${MYSQL_PORT}'
+user='${MYSQL_USER}'
 EOF
 
 if [ -n "${MYSQL_PASSWORD}" ]; then
-    echo "password=${MYSQL_PASSWORD}" >> "${MYSQL_CREDS_FILE}"
+    echo "password='${MYSQL_PASSWORD}'" >> "${MYSQL_CREDS_FILE}"
 fi
 
 # ===========================================
