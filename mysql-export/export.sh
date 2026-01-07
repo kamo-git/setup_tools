@@ -3,6 +3,17 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${SCRIPT_DIR}/.env"
+MYSQL_CREDS_FILE=""
+
+# クリーンアップ関数
+cleanup() {
+    if [ -n "${MYSQL_CREDS_FILE}" ] && [ -f "${MYSQL_CREDS_FILE}" ]; then
+        rm -f "${MYSQL_CREDS_FILE}"
+    fi
+}
+
+# 終了時のクリーンアップを設定
+trap cleanup EXIT
 
 # ===========================================
 # .envファイルの読み込みと検証
@@ -52,17 +63,28 @@ MYSQL_PORT="${MYSQL_PORT:-3306}"
 OUTPUT_DIR="${OUTPUT_DIR:-./output}"
 
 # ===========================================
+# MySQL認証情報ファイルの作成
+# ===========================================
+MYSQL_CREDS_FILE=$(mktemp)
+chmod 600 "${MYSQL_CREDS_FILE}"
+
+cat > "${MYSQL_CREDS_FILE}" <<EOF
+[client]
+host=${MYSQL_HOST}
+port=${MYSQL_PORT}
+user=${MYSQL_USER}
+EOF
+
+if [ -n "${MYSQL_PASSWORD}" ]; then
+    echo "password=${MYSQL_PASSWORD}" >> "${MYSQL_CREDS_FILE}"
+fi
+
+# ===========================================
 # MySQL接続テスト
 # ===========================================
 echo "MySQLサーバーへの接続をテストしています..."
 
-MYSQL_OPTS="-h ${MYSQL_HOST} -P ${MYSQL_PORT} -u ${MYSQL_USER}"
-if [ -n "${MYSQL_PASSWORD}" ]; then
-    export MYSQL_PWD="${MYSQL_PASSWORD}"
-fi
-
-# shellcheck disable=SC2086
-if ! mysqladmin ${MYSQL_OPTS} ping &>/dev/null; then
+if ! mysqladmin --defaults-extra-file="${MYSQL_CREDS_FILE}" ping &>/dev/null; then
     echo "エラー: MySQLサーバーに接続できません"
     echo "接続情報を確認してください:"
     echo "  ホスト: ${MYSQL_HOST}"
@@ -90,8 +112,9 @@ SUCCESS_COUNT=0
 FAIL_COUNT=0
 
 for DB_NAME in "${DB_ARRAY[@]}"; do
-    # 前後の空白を除去
-    DB_NAME=$(echo "${DB_NAME}" | xargs)
+    # 前後の空白を除去（パラメータ展開を使用）
+    DB_NAME="${DB_NAME#"${DB_NAME%%[![:space:]]*}"}"
+    DB_NAME="${DB_NAME%"${DB_NAME##*[![:space:]]}"}"
 
     if [ -z "${DB_NAME}" ]; then
         continue
@@ -101,8 +124,7 @@ for DB_NAME in "${DB_ARRAY[@]}"; do
 
     OUTPUT_FILE="${EXPORT_DIR}/${DB_NAME}.sql"
 
-    # shellcheck disable=SC2086
-    if ERROR_MSG=$(mysqldump ${MYSQL_OPTS} --no-data --skip-comments "${DB_NAME}" 2>&1 > "${OUTPUT_FILE}"); then
+    if ERROR_MSG=$(mysqldump --defaults-extra-file="${MYSQL_CREDS_FILE}" --no-data --skip-comments "${DB_NAME}" 2>&1 > "${OUTPUT_FILE}"); then
         echo "完了"
         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     else
